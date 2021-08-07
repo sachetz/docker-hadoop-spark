@@ -54,6 +54,91 @@ Copy breweries.csv to HDFS:
 ```
 
 
+## Quick Start Hive
+
+Go to the command line of the Hive server and start hiveserver2
+
+```
+  docker exec -it hive-server bash
+
+  hiveserver2
+```
+
+Maybe a little check that something is listening on port 10000 now
+```
+  netstat -anp | grep 10000
+tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      446/java
+
+```
+
+Okay. Beeline is the command line interface with Hive. Let's connect to hiveserver2 now.
+
+```
+  beeline
+  
+  !connect jdbc:hive2://127.0.0.1:10000 scott tiger
+```
+
+Didn't expect to encounter scott/tiger again after my Oracle days. But there you have it. Definitely not a good idea to keep that user on production.
+
+Not a lot of databases here yet.
+```
+  show databases;
+  
++----------------+
+| database_name  |
++----------------+
+| default        |
++----------------+
+1 row selected (0.335 seconds)
+```
+
+Let's change that.
+
+```
+  create database openbeer;
+  use openbeer;
+```
+
+And let's create a table.
+
+```
+CREATE EXTERNAL TABLE IF NOT EXISTS breweries(
+    NUM INT,
+    NAME CHAR(100),
+    CITY CHAR(100),
+    STATE CHAR(100),
+    ID INT )
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+location '/data/openbeer/breweries';
+```
+
+And have a little select statement going.
+
+```
+  select name from breweries limit 10;
++----------------------------------------------------+
+|                        name                        |
++----------------------------------------------------+
+| name                                                                                                 |
+| NorthGate Brewing                                                                                    |
+| Against the Grain Brewery                                                                            |
+| Jack's Abby Craft Lagers                                                                             |
+| Mike Hess Brewing Company                                                                            |
+| Fort Point Beer Company                                                                              |
+| COAST Brewing Company                                                                                |
+| Great Divide Brewing Company                                                                         |
+| Tapistry Brewing                                                                                     |
+| Big Lake Brewing                                                                                     |
++----------------------------------------------------+
+10 rows selected (0.113 seconds)
+```
+
+There you go: your private Hive server to play with.
+
+
 ## Quick Start Spark (PySpark)
 
 Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
@@ -146,100 +231,14 @@ only showing top 20 rows
 
 How cool is that? Your own Spark cluster to play with.
 
-
-## Quick Start Hive
-
-Go to the command line of the Hive server and start hiveserver2
-
-```
-  docker exec -it hive-server bash
-
-  hiveserver2
-```
-
-Maybe a little check that something is listening on port 10000 now
-```
-  netstat -anp | grep 10000
-tcp        0      0 0.0.0.0:10000           0.0.0.0:*               LISTEN      446/java
-
-```
-
-Okay. Beeline is the command line interface with Hive. Let's connect to hiveserver2 now.
-
-```
-  beeline
-  
-  !connect jdbc:hive2://127.0.0.1:10000 scott tiger
-```
-
-Didn't expect to encounter scott/tiger again after my Oracle days. But there you have it. Definitely not a good idea to keep that user on production.
-
-Not a lot of databases here yet.
-```
-  show databases;
-  
-+----------------+
-| database_name  |
-+----------------+
-| default        |
-+----------------+
-1 row selected (0.335 seconds)
-```
-
-Let's change that.
-
-```
-  create database openbeer;
-  use openbeer;
-```
-
-And let's create a table.
-
-```
-CREATE EXTERNAL TABLE IF NOT EXISTS breweries(
-    NUM INT,
-    NAME CHAR(100),
-    CITY CHAR(100),
-    STATE CHAR(100),
-    ID INT )
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ','
-STORED AS TEXTFILE
-location '/data/openbeer/breweries';
-```
-
-And have a little select statement going.
-
-```
-  select name from breweries limit 10;
-+----------------------------------------------------+
-|                        name                        |
-+----------------------------------------------------+
-| name                                                                                                 |
-| NorthGate Brewing                                                                                    |
-| Against the Grain Brewery                                                                            |
-| Jack's Abby Craft Lagers                                                                             |
-| Mike Hess Brewing Company                                                                            |
-| Fort Point Beer Company                                                                              |
-| COAST Brewing Company                                                                                |
-| Great Divide Brewing Company                                                                         |
-| Tapistry Brewing                                                                                     |
-| Big Lake Brewing                                                                                     |
-+----------------------------------------------------+
-10 rows selected (0.113 seconds)
-```
-
-There you go: your private Hive server to play with.
-
-
-## Enabling Spark Session interaction with Hive
-
-SparkSession is not currently able to communicate with Hive metastore. Placeholder created.
+Enabling Spark Session connection with Hive.
 
 ```
 import org.apache.spark.sql.SparkSession
 val sparkSession = SparkSession.builder.appName("app-name").config("hive.metastore.uris", "thrift://hive-metastore:9083").enableHiveSupport().getOrCreate()
 ```
+
+SparkSession is not currently able to communicate with Hive metastore. Placeholder created.
 
 
 ## Configure Environment Variables
