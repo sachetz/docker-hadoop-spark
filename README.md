@@ -103,16 +103,16 @@ Let's change that.
 And let's create a table.
 
 ```
-CREATE EXTERNAL TABLE IF NOT EXISTS breweries(
+  CREATE EXTERNAL TABLE IF NOT EXISTS breweries(
     NUM INT,
     NAME CHAR(100),
     CITY CHAR(100),
     STATE CHAR(100),
     ID INT )
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ','
-STORED AS TEXTFILE
-location '/data/openbeer/breweries';
+  ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  STORED AS TEXTFILE
+  location '/data/openbeer/breweries';
 ```
 
 And have a little select statement going.
@@ -122,16 +122,16 @@ And have a little select statement going.
 +----------------------------------------------------+
 |                        name                        |
 +----------------------------------------------------+
-| name                                                                                                 |
-| NorthGate Brewing                                                                                    |
-| Against the Grain Brewery                                                                            |
-| Jack's Abby Craft Lagers                                                                             |
-| Mike Hess Brewing Company                                                                            |
-| Fort Point Beer Company                                                                              |
-| COAST Brewing Company                                                                                |
-| Great Divide Brewing Company                                                                         |
-| Tapistry Brewing                                                                                     |
-| Big Lake Brewing                                                                                     |
+| name                                               |
+| NorthGate Brewing                                  |
+| Against the Grain Brewery                          |
+| Jack's Abby Craft Lagers                           |
+| Mike Hess Brewing Company                          |
+| Fort Point Beer Company                            |
+| COAST Brewing Company                              |
+| Great Divide Brewing Company                       |
+| Tapistry Brewing                                   |
+| Big Lake Brewing                                   |
 +----------------------------------------------------+
 10 rows selected (0.113 seconds)
 ```
@@ -139,53 +139,7 @@ And have a little select statement going.
 There you go: your private Hive server to play with.
 
 
-## Quick Start Spark (PySpark)
-
-Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
-
-Go to the command line of the Spark master and start PySpark.
-```
-  docker exec -it spark-master bash
-
-  /spark/bin/pyspark --master spark://spark-master:7077
-```
-
-Load breweries.csv from HDFS.
-```
-  brewfile = spark.read.csv("hdfs://namenode:9000/data/openbeer/breweries/breweries.csv")
-  
-  brewfile.show()
-+----+--------------------+-------------+-----+---+
-| _c0|                 _c1|          _c2|  _c3|_c4|
-+----+--------------------+-------------+-----+---+
-|null|                name|         city|state| id|
-|   0|  NorthGate Brewing |  Minneapolis|   MN|  0|
-|   1|Against the Grain...|   Louisville|   KY|  1|
-|   2|Jack's Abby Craft...|   Framingham|   MA|  2|
-|   3|Mike Hess Brewing...|    San Diego|   CA|  3|
-|   4|Fort Point Beer C...|San Francisco|   CA|  4|
-|   5|COAST Brewing Com...|   Charleston|   SC|  5|
-|   6|Great Divide Brew...|       Denver|   CO|  6|
-|   7|    Tapistry Brewing|     Bridgman|   MI|  7|
-|   8|    Big Lake Brewing|      Holland|   MI|  8|
-|   9|The Mitten Brewin...| Grand Rapids|   MI|  9|
-|  10|      Brewery Vivant| Grand Rapids|   MI| 10|
-|  11|    Petoskey Brewing|     Petoskey|   MI| 11|
-|  12|  Blackrocks Brewery|    Marquette|   MI| 12|
-|  13|Perrin Brewing Co...|Comstock Park|   MI| 13|
-|  14|Witch's Hat Brewi...|   South Lyon|   MI| 14|
-|  15|Founders Brewing ...| Grand Rapids|   MI| 15|
-|  16|   Flat 12 Bierwerks| Indianapolis|   IN| 16|
-|  17|Tin Man Brewing C...|   Evansville|   IN| 17|
-|  18|Black Acre Brewin...| Indianapolis|   IN| 18|
-+----+--------------------+-------------+-----+---+
-only showing top 20 rows
-
-```
-
-
-
-## Quick Start Spark (Scala)
+## Quick Start Spark
 
 Go to http://<dockerhadoop_IP_address>:8080 or http://localhost:8080/ on your Docker host (laptop) to see the status of the Spark master.
 
@@ -193,8 +147,15 @@ Go to the command line of the Spark master and start spark-shell.
 ```
   docker exec -it spark-master bash
   
-  spark/bin/spark-shell --master spark://spark-master:7077
+  spark/bin/spark-shell --master spark://spark-master:7077 --conf "spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083" --conf "spark.hadoop.hive.metastore.schema.verification=true" --conf "spark.hadoop.hive.metastore.schema.verification.record.version=true"
 ```
+
+If you want to use pyspark, you can run the following command. I will be using scala for the rest of the tutorial.
+
+```
+  /spark/bin/pyspark --master spark://spark-master:7077 --conf "spark.hadoop.hive.metastore.uris=thrift://hive-metastore:9083" --conf "spark.hadoop.hive.metastore.schema.verification=true" --conf "spark.hadoop.hive.metastore.schema.verification.record.version=true"
+```
+
 
 Load breweries.csv from HDFS.
 ```
@@ -229,16 +190,19 @@ only showing top 20 rows
 
 ```
 
+Let's check if our spark session can connect to hive metastore.
+
+```
+  spark.sql("show databases").show(10, false)
++---------+
+|namespace|
++---------+
+|default  |
+|openbeer |
++---------+
+```
+
 How cool is that? Your own Spark cluster to play with.
-
-Enabling Spark Session connection with Hive.
-
-```
-import org.apache.spark.sql.SparkSession
-val sparkSession = SparkSession.builder.appName("app-name").config("hive.metastore.uris", "thrift://hive-metastore:9083").enableHiveSupport().getOrCreate()
-```
-
-SparkSession is not currently able to communicate with Hive metastore. Placeholder created.
 
 
 ## Configure Environment Variables
